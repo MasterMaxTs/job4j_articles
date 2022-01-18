@@ -35,13 +35,13 @@ public class SimpleArticleService implements ArticleService {
                 .peek(i -> LOGGER.info("Сгенерирована статья № {}", i))
                 .mapToObj((x) -> new SoftReference<>(articleGenerator.generate(words)))
                 .collect(Collectors.toList());
-        softArticles.forEach(sa -> {
-                                    Article art = sa.get();
-                                    if (art != null) {
-                                        articles.add(art);
-                                    }
-                                }
-        );
+        for (SoftReference<Article> sa :
+                softArticles) {
+            Article article = sa.get();
+            if (article != null) {
+                articles.add(article);
+            }
+        }
         articles.forEach(articleStore::save);
     }
 }
