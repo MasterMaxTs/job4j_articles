@@ -32,12 +32,13 @@ public class WordStore implements Store<Word>, AutoCloseable {
     private void initConnection() {
         LOGGER.info("Подключение к базе данных слов");
         try {
+            Class.forName(properties.getProperty("driver"));
             connection = DriverManager.getConnection(
                     properties.getProperty("url"),
                     properties.getProperty("username"),
                     properties.getProperty("password")
             );
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             LOGGER.error("Не удалось выполнить операцию: { }", e.getCause());
             throw new IllegalStateException();
         }
