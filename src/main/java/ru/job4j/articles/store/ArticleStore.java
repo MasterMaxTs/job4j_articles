@@ -16,7 +16,8 @@ import java.util.Properties;
 
 public class ArticleStore implements Store<Article>, AutoCloseable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ArticleStore.class.getSimpleName());
+    private static final Logger LOGGER =
+                    LoggerFactory.getLogger(ArticleStore.class.getSimpleName());
 
     private final Properties properties;
 
@@ -31,13 +32,14 @@ public class ArticleStore implements Store<Article>, AutoCloseable {
     private void initConnection() {
         LOGGER.info("Создание подключения к БД статей");
         try {
+            Class.forName(properties.getProperty("driver"));
             connection = DriverManager.getConnection(
                     properties.getProperty("url"),
                     properties.getProperty("username"),
                     properties.getProperty("password")
             );
-        } catch (SQLException throwables) {
-            LOGGER.error("Не удалось выполнить операцию: { }", throwables.getCause());
+        } catch (SQLException | ClassNotFoundException e) {
+            LOGGER.error("Не удалось выполнить операцию: { }", e.getCause());
             throw new IllegalStateException();
         }
     }
@@ -57,7 +59,9 @@ public class ArticleStore implements Store<Article>, AutoCloseable {
     public Article save(Article model) {
         LOGGER.info("Сохранение статьи");
         var sql = "insert into articles(text) values(?)";
-        try (var statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (var statement = connection.prepareStatement(
+                sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             statement.setString(1, model.getText());
             statement.executeUpdate();
             var key = statement.getGeneratedKeys();
@@ -79,10 +83,12 @@ public class ArticleStore implements Store<Article>, AutoCloseable {
         try (var statement = connection.prepareStatement(sql)) {
             var selection = statement.executeQuery();
             while (selection.next()) {
-                articles.add(new Article(
+                articles.add(
+                        new Article(
                         selection.getInt("id"),
                         selection.getString("text")
-                ));
+                    )
+                );
             }
         } catch (Exception e) {
             LOGGER.error("Не удалось выполнить операцию: { }", e.getCause());

@@ -16,7 +16,8 @@ import java.util.Properties;
 
 public class WordStore implements Store<Word>, AutoCloseable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WordStore.class.getSimpleName());
+    private static final Logger LOGGER =
+                        LoggerFactory.getLogger(WordStore.class.getSimpleName());
 
     private final Properties properties;
 
@@ -32,12 +33,13 @@ public class WordStore implements Store<Word>, AutoCloseable {
     private void initConnection() {
         LOGGER.info("Подключение к базе данных слов");
         try {
+            Class.forName(properties.getProperty("driver"));
             connection = DriverManager.getConnection(
                     properties.getProperty("url"),
                     properties.getProperty("username"),
                     properties.getProperty("password")
             );
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             LOGGER.error("Не удалось выполнить операцию: { }", e.getCause());
             throw new IllegalStateException();
         }
@@ -46,7 +48,9 @@ public class WordStore implements Store<Word>, AutoCloseable {
     private void initScheme() {
         LOGGER.info("Создание схемы таблицы слов");
         try (var statement = connection.createStatement()) {
-            var sql = Files.readString(Path.of("db/scripts", "dictionary.sql"));
+            var sql = Files.readString(
+                    Path.of("db/scripts", "dictionary.sql")
+            );
             statement.execute(sql);
         } catch (Exception e) {
             LOGGER.error("Не удалось выполнить операцию: { }", e.getCause());
@@ -69,7 +73,10 @@ public class WordStore implements Store<Word>, AutoCloseable {
     public Word save(Word model) {
         LOGGER.info("Добавление слова в базу данных");
         var sql = "insert into dictionary(word) values(?);";
-        try (var statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (var statement =
+                     connection.prepareStatement(
+                             sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             statement.setString(1, model.getValue());
             statement.executeUpdate();
             var key = statement.getGeneratedKeys();
