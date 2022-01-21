@@ -40,7 +40,6 @@ public class ArticleStore implements Store<Article>, AutoCloseable {
             );
         } catch (SQLException | ClassNotFoundException e) {
             LOGGER.error("Не удалось выполнить операцию: { }", e.getCause());
-            throw new IllegalStateException();
         }
     }
 
